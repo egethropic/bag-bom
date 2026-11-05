@@ -1,0 +1,26 @@
+:host{all:initial;color:#e4e9ed;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color-scheme:dark}
+*{box-sizing:border-box} [hidden]{display:none!important}
+aside{height:100%;overflow:auto;background:#151c22;border-left:1px solid #33414a;padding:22px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+header small{font-size:10px;letter-spacing:1.8px;color:#8ba1af;font-weight:650}
+h1{font-size:28px;letter-spacing:-1px;margin:5px 0 0;font-weight:650;line-height:1.15}
+h1 span{font-size:11px;color:#9ab0bf;letter-spacing:0;margin-left:8px;vertical-align:middle;border:1px solid #3a4b55;border-radius:5px;padding:2px 5px}
+.intro{color:#a5b4be;margin:13px 0 19px;font-size:14px}
+button,input,select,textarea{font:inherit} button{border:1px solid #44535e;border-radius:7px;padding:10px 13px;background:#26333d;color:#e4e9ed;cursor:pointer;font-weight:600}
+button:hover{background:#334650;border-color:#81b7b0}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid #8de2c9;outline-offset:3px}
+.icon{font-size:20px;padding:0;width:32px;height:32px;background:transparent;flex-shrink:0}
+.viewfinder{position:relative;aspect-ratio:16/9;border:1px solid #394a56;border-radius:10px;overflow:hidden;background:#0a1116}
+video{width:100%;height:100%;object-fit:contain;display:block}
+#guide{position:absolute;left:5%;top:20%;width:90%;height:60%;border:1px solid #8de2c9a0;border-radius:5px;pointer-events:none}
+#guide span{position:absolute;bottom:-24px;width:100%;text-align:center;font-size:10px;color:#ccd8db;text-shadow:0 1px 2px #000}
+#camera-off{position:absolute;inset:0;background:radial-gradient(ellipse at center,#21313a,#0e171f);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px}
+#camera-off b{font-size:14px;font-weight:550}#camera-off span{font-size:11px;color:#95a9b7}.local{position:absolute;top:10px;left:10px;font-size:9px;letter-spacing:1.2px;color:#8de2c9;background:#122b28dd;padding:4px 6px;border-radius:3px}
+.field-label{display:block;color:#afbec8;font-size:11px;font-weight:650;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.8px}
+select,textarea{width:100%;border:1px solid #44535e;border-radius:6px;background:#10181f;color:#e4e9ed;padding:9px}textarea{resize:vertical;line-height:1.5}input[type=file]{width:100%;font-size:12px}input[type=checkbox]{accent-color:#8de2c9;flex-shrink:0;margin:0}
+.actions{display:flex;gap:8px;margin:12px 0 17px}.primary{background:#8de2c9;color:#142823;border-color:#8de2c9;flex:1}.primary:hover{background:#b7f3df}.toggle{display:flex;align-items:center;gap:8px;font-size:12px;margin:10px 0;line-height:1.5}.hint{font-size:11px;color:#92a7b6;line-height:1.6;margin:6px 0 12px}
+#status{border:1px solid #374a56;border-radius:7px;background:#1d2b35;font-size:12px;line-height:1.6;padding:11px;margin:16px 0 12px}
+#status[data-kind=success]{border-color:#497d6f;color:#b7f3df;background:#16342c}#status[data-kind=warning]{border-color:#806641;background:#342b1d;color:#edd5a9}#status[data-kind=error]{border-color:#90585c;background:#382326;color:#f3c4c4}
+#selected{font-size:12px;line-height:1.5;color:#a1e8ce;padding:4px 0 14px;overflow-wrap:anywhere}
+.candidate{display:flex;flex-direction:column;width:100%;text-align:left;gap:5px;margin:9px 0;overflow-wrap:anywhere}.candidate b{font:600 13px ui-monospace,monospace}.candidate span{font-size:12px;color:#a1e8ce}.candidate small{font-size:10px;color:#b7c4cc;font-weight:400}.candidate.chosen{border-color:#8de2c9}
+details{border-top:1px solid #33414a;margin-top:17px;padding-top:14px}summary{cursor:pointer;font-size:12px;color:#d1dce3;font-weight:600}summary span{font-weight:400;color:#8ba1af;font-size:10px}#match{margin-top:8px;width:100%}footer{font-size:10px;color:#8ba1af;line-height:1.8;border-top:1px solid #33414a;margin-top:21px;padding-top:15px}
+:host(.bag-bom-mini) aside{padding:12px}:host(.bag-bom-mini) h1{font-size:21px}:host(.bag-bom-mini) header small,:host(.bag-bom-mini) h1 span{display:none}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://go.kicad.org/pcm/schemas/v2",
+  "name": "Bag BOM",
+  "description": "Offline webcam label scanning and component selection for InteractiveHtmlBom.",
+  "description_full": "Show a component bag label to your webcam and highlight exact MPN or supplier-number matches in an existing InteractiveHtmlBom export. OCR runs locally in the browser with bundled assets. Ambiguous matches require manual selection. Experimental release; requires InteractiveHtmlBom separately. Apache-2.0.",
+  "identifier": "com.github.egethropic.bag-bom",
+  "type": "plugin",
+  "author": {"name": "egethropic", "contact": {"web": "https://github.com/egethropic"}},
+  "license": "Apache-2.0",
+  "resources": {
+    "homepage": "https://github.com/egethropic/bag-bom",
+    "bugtracker": "https://github.com/egethropic/bag-bom/issues"
+  },
+  "tags": ["bom", "assembly", "ocr", "camera"],
+  "versions": [{
+    "version": "0.1.0", "status": "testing", "kicad_version": "9.0",
+    "kicad_version_max": "10.99", "runtime": "swig",
+    "platforms": ["windows", "linux", "macos"]
+  }]
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+bag_bom/web/vendor/
+__pycache__/
+*.pyc
+test-results/
+playwright-report/
+.venv/
+tests/generated/

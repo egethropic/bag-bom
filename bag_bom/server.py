@@ -22,6 +22,7 @@ def augment_html(source: str, prefix: str) -> bytes:
         raise ValueError("This file already contains Bag BOM. Open the original InteractiveHtmlBom export.")
     additions = f'''<div id="bag-bom-root" data-assets="{prefix}assets/"></div>
 <script src="{prefix}assets/matcher.js"></script>
+<script src="{prefix}assets/barcodes.js"></script>
 <script src="{prefix}assets/scanner.js"></script>
 '''
     # Insert after upstream inline scripts, but before load events fire.

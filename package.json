@@ -1,18 +1,19 @@
 {
   "name": "bag-bom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Offline webcam label selection for InteractiveHtmlBom",
   "license": "Apache-2.0",
   "scripts": {
     "vendor": "node scripts/vendor.mjs",
-    "test": "node --test tests/matcher.test.cjs",
+    "test": "node --test tests/matcher.test.cjs tests/barcodes.test.cjs",
     "test:browser": "playwright test",
     "build": "npm run vendor && python scripts/package.py"
   },
   "dependencies": {
     "@tesseract.js-data/eng": "1.0.0",
-    "tesseract.js": "7.0.0"
+    "tesseract.js": "7.0.0",
+    "zxing-wasm": "3.1.6"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1"

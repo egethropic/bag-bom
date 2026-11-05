@@ -4,6 +4,13 @@ Bag BOM source is Copyright 2026 egethropic, licensed under Apache-2.0.
 
 ## Bundled in installable releases
 
+- [zxing-wasm](https://github.com/Sec-ant/zxing-wasm), version 3.1.6, MIT.
+  Reader-only JavaScript/WASM: `web/vendor/zxing-reader.js`, `zxing_reader.wasm`.
+  License: `web/vendor/ZXING-WASM-LICENSE.txt`. Includes ZXing-C++ at commit
+  `2c3dcfeffa7878950a58c1703c86774a428b0c91` (Apache-2.0,
+  `ZXING-CPP-LICENSE.txt`), stb image decoding (`STB-LICENSE.txt`), and the
+  Emscripten runtime (`EMSCRIPTEN-LICENSE.txt`). Only the reader is shipped;
+  barcode writing remains development-only. See `barcode-dependencies.json`.
 - [Tesseract.js](https://github.com/naptha/tesseract.js), version 7.0.0, Apache-2.0.
   License: `web/vendor/TESSERACT-JS-LICENSE.txt`.
 - [tesseract.js-core](https://github.com/naptha/tesseract.js-core), resolved and

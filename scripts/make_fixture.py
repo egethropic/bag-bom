@@ -90,3 +90,23 @@ with (OUT / 'label.y4m').open('wb') as output:
     for _ in range(5):
         output.write(b'FRAME\n' + frame)
 print(f'Generated fixture and OCR labels in {OUT}')
+
+# Real machine-readable codes with fictional payloads for the barcode decoder.
+import subprocess
+subprocess.run(['node', str(ROOT / 'scripts/make_barcode_fixtures.cjs')], check=True)
+for name in ('lcsc-qr', 'digikey-dm'):
+    frame_image = Image.new('RGB', (1280, 720), 'white')
+    code = Image.open(OUT / (name + '.png')).convert('RGB')
+    code.thumbnail((340, 340), Image.Resampling.NEAREST)
+    frame_image.paste(code, ((1280 - code.width) // 2, (720 - code.height) // 2))
+    frame_image.save(OUT / (name + '-frame.png'))
+    gray = frame_image.convert('L').point(lambda n: round(16 + n * 219 / 255)).tobytes()
+    with (OUT / (name + '.y4m')).open('wb') as output:
+        output.write(b'YUV4MPEG2 W1280 H720 F5:1 Ip A1:1 C420jpeg\n')
+        for _ in range(5):
+            output.write(b'FRAME\n' + gray + bytes([128]) * (1280 * 720 // 2))
+multi = Image.new('RGB', (900, 500), 'white')
+for name, x in [('lcsc-qr', 30), ('second-qr', 480)]:
+    code = Image.open(OUT / (name + '.png')).convert('RGB')
+    multi.paste(code, (x, 70))
+multi.save(OUT / 'multiple-qr.png')

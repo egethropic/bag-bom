@@ -29,10 +29,11 @@ with tempfile.TemporaryDirectory() as directory:
             raise RuntimeError('Packaged launcher did not return a loopback URL: ' + url)
         with urlopen(url, timeout=10) as response:
             assert b'bag-bom-root' in response.read()
-        for asset in ('scanner.js', 'vendor/tesseract.min.js', 'vendor/eng.traineddata.gz'):
+        for asset in ('scanner.js', 'barcodes.js', 'barcode-worker.js', 'vendor/zxing-reader.js',
+                      'vendor/zxing_reader.wasm', 'vendor/tesseract.min.js', 'vendor/eng.traineddata.gz'):
             with urlopen(url + 'assets/' + asset, timeout=10) as response:
                 assert response.status == 200
-        print('Isolated manual package: launch, HTML, JavaScript, and OCR data passed.')
+        print('Isolated manual package: launch, HTML, JavaScript, barcode WASM, and OCR data passed.')
     finally:
         process.terminate()
         try:

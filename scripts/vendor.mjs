@@ -5,6 +5,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dest = path.join(root, 'bag_bom/web/vendor');
 await mkdir(dest, {recursive: true});
 const copy = (src, name) => copyFile(path.join(root, 'node_modules', src), path.join(dest, name));
+await copy('zxing-wasm/dist/iife/reader/index.js', 'zxing-reader.js');
+await copy('zxing-wasm/dist/reader/zxing_reader.wasm', 'zxing_reader.wasm');
+await copy('zxing-wasm/LICENSE', 'ZXING-WASM-LICENSE.txt');
 await copy('tesseract.js/dist/tesseract.min.js', 'tesseract.min.js');
 await copy('tesseract.js/dist/worker.min.js', 'worker.min.js');
 for (const file of await readdir(path.join(root, 'node_modules/tesseract.js-core'))) {
@@ -37,4 +40,4 @@ await writeFile(path.join(dest, 'LANGUAGE-DATA-NOTICE.txt'),
   'English Tesseract language data, from @tesseract.js-data/eng 1.0.0.\n' +
   'Source: https://github.com/naptha/tessdata\nLicense: Apache-2.0 (see TESSERACT-CORE-LICENSE.txt).\n' +
   'Package metadata:\n' + dataLicense);
-console.log('Bundled offline OCR assets.');
+console.log('Bundled offline barcode and OCR assets.');

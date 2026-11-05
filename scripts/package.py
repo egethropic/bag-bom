@@ -14,7 +14,8 @@ def build():
     if version != package_version:
         raise SystemExit('metadata.json and package.json versions must agree')
     plugin = ROOT / 'bag_bom'
-    if not (plugin / 'web/vendor/eng.traineddata.gz').is_file():
+    if not all((plugin / ('web/vendor/' + name)).is_file() for name in
+               ('eng.traineddata.gz', 'zxing-reader.js', 'zxing_reader.wasm')):
         raise SystemExit('Run npm ci and npm run vendor first')
     dist = ROOT / 'dist'
     dist.mkdir(exist_ok=True)

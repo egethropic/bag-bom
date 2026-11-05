@@ -9,3 +9,7 @@ affiliated with or endorsed by KiCad or the InteractiveHtmlBom maintainers.
 Release packages bundle Tesseract.js, tesseract.js-core, and English Tesseract
 language data under Apache-2.0. Their license files and language-data provenance
 are included in plugins/web/vendor. See THIRD_PARTY_NOTICES.md.
+
+Release packages also bundle the zxing-wasm reader (MIT), ZXing-C++ (Apache-2.0),
+and stb image decoding (MIT/public domain), with their licenses in web/vendor.
+The barcode writer used to generate test fixtures is not distributed.

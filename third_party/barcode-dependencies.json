@@ -1,0 +1,10 @@
+{
+  "zxing_wasm_version": "3.1.6",
+  "zxing_cpp_commit": "2c3dcfeffa7878950a58c1703c86774a428b0c91",
+  "reader_wasm_sha256": "5003fb4b88c4fbd1fd518a2fd8c8ad365c519e183a08c03a322dddfea3cea84e",
+  "licenses": {
+    "ZXING-CPP-LICENSE.txt": "https://raw.githubusercontent.com/zxing-cpp/zxing-cpp/2c3dcfeffa7878950a58c1703c86774a428b0c91/LICENSE",
+    "STB-LICENSE.txt": "https://raw.githubusercontent.com/nothings/stb/d14d46f6b44456eb88beac58cba833a4135d4c89/LICENSE"
+  },
+  "note": "Reader build disables barcode writers. Upstream CMake fetches stb without a pinned revision; the recorded URL is the license snapshot, not a claim about the exact compiled stb revision. Emscripten runtime license also bundled."
+}

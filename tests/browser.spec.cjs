@@ -15,6 +15,7 @@ test.afterAll(() => server?.kill());
 test.beforeEach(async ({page}) => {
   await page.goto(url);
   await expect(page.locator('#bag-bom-root').locator('#status')).toContainText('3 part types ready');
+  await page.locator('#bag-bom-root').locator('#mode').selectOption('ocr');
 });
 async function find(page, text) {
   const host = page.locator('#bag-bom-root');

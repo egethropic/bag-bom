@@ -94,11 +94,11 @@ print(f'Generated fixture and OCR labels in {OUT}')
 # Real machine-readable codes with fictional payloads for the barcode decoder.
 import subprocess
 subprocess.run(['node', str(ROOT / 'scripts/make_barcode_fixtures.cjs')], check=True)
-for name in ('lcsc-qr', 'digikey-dm'):
+for name in ('lcsc-qr', 'digikey-dm', 'lcsc-qr-edge'):
     frame_image = Image.new('RGB', (1280, 720), 'white')
-    code = Image.open(OUT / (name + '.png')).convert('RGB')
+    code = Image.open(OUT / (name.replace('-edge', '') + '.png')).convert('RGB')
     code.thumbnail((340, 340), Image.Resampling.NEAREST)
-    frame_image.paste(code, ((1280 - code.width) // 2, (720 - code.height) // 2))
+    frame_image.paste(code, (20, 20) if name.endswith('-edge') else ((1280 - code.width) // 2, (720 - code.height) // 2))
     frame_image.save(OUT / (name + '-frame.png'))
     gray = frame_image.convert('L').point(lambda n: round(16 + n * 219 / 255)).tobytes()
     with (OUT / (name + '.y4m')).open('wb') as output:

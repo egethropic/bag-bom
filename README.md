@@ -7,14 +7,14 @@
 [![Tests](https://github.com/egethropic/bag-bom/actions/workflows/test.yml/badge.svg)](https://github.com/egethropic/bag-bom/actions/workflows/test.yml)
 
 Bag BOM is a KiCad companion plugin from **egethropic**. Hold the **QR or Data
-Matrix code on a DigiKey or LCSC bag** in front of your webcam. Two consistent
-decoded reads select the matching components and highlight their placements
+Matrix code on a DigiKey or LCSC bag** in front of your webcam. The first successful
+decode selects matching components immediately and highlights their placements
 in your InteractiveHtmlBom viewer, including parts on both sides of the board.
 Printed-text OCR remains available as an explicit fallback.
 
 ![Bag BOM scanning a synthetic QR label](docs/scanner.png)
 
-**Experimental v0.2.0.** Tested with real barcode decoding of synthetic QR/Data
+**Experimental v0.2.1.** Tested with real barcode decoding of synthetic QR/Data
 Matrix images and simulated cameras, plus two published DigiKey label photos.
 A third published photo failed decoding. Physical webcams, glare, crumpled bags,
 small codes, and your actual parts still need bench validation. Check the highlighted part
@@ -24,7 +24,7 @@ before soldering. Bag BOM selects parts; it never marks them as placed.
 
 1. Install [InteractiveHtmlBom](https://github.com/openscopeproject/InteractiveHtmlBom/wiki/Installation)
    separately in KiCad.
-2. Download `bag-bom-0.2.0-pcm.zip` from
+2. Download `bag-bom-0.2.1-pcm.zip` from
    [Releases](https://github.com/egethropic/bag-bom/releases).
 3. In KiCad's **Plugin and Content Manager → Install from File**, select that ZIP.
 4. Restart the PCB Editor or refresh its action plugins.
@@ -37,7 +37,7 @@ KiCad 10.0.8 on Windows is the locally checked Python runtime. Linux/macOS and
 KiCad 9 are intended targets, not yet manually verified. KiCad 11+ IPC support
 is not included. This project is not yet in KiCad's official plugin catalog.
 
-Manual alternative: extract `bag-bom-0.2.0-manual.zip` so the `bag_bom` folder
+Manual alternative: extract `bag-bom-0.2.1-manual.zip` so the `bag_bom` folder
 sits inside your KiCad user scripting plugins directory. Avoid installing both
 the manual and PCM copies.
 
@@ -52,9 +52,15 @@ the manual and PCM copies.
 3. Launch Bag BOM and choose that `ibom.html`. It opens in your default browser.
 4. Select your webcam, click **Start camera**, and allow the browser's camera
    permission. Leave **QR / Data Matrix / barcode** selected. Keep the complete
-   square product code, including its white border, in focus inside the guide.
-5. A unique exact match in two consecutive decoded frames selects
-   its footprints automatically. Disable **Auto-select** to choose manually.
+   square product code, including its white border, in focus in the camera view.
+5. A unique exact match selects its footprints immediately on the first decoded
+   frame. No selection button or auto-select toggle is needed in barcode mode.
+   The full camera frame is scanned, including codes near its edges.
+
+**Tag detected** keeps the last decoded part number visible. When that identifier
+is absent from the current BOM, an explicit no-match message stays visible even
+if subsequent frames miss the code. Detection cannot select a part that is not
+present in the loaded board.
 
 The scanner highlights matching **footprint IDs**, never substring search
 results. It switches the viewer to the relevant side(s) and clears BOM filters
@@ -76,11 +82,11 @@ digits are excluded from automatic matching in this version.
 
 **Label photo or text** accepts a code image or a USB barcode scanner acting as a
 keyboard. In barcode mode, a decoded image or Enter-submitted exact identifier
-auto-selects when Auto-select is enabled. Multiple codes are evaluated together;
+auto-selects immediately. Multiple codes are evaluated together;
 different matching parts are never selected automatically.
 
 Choose **Printed text (OCR fallback)** for labels without a readable code.
-Live OCR requires two reads at confidence ≥75; OCR image/text results require a
+Live OCR requires two reads at confidence ≥75 and its Auto-select option enabled; OCR image/text results require a
 click. Similar OCR strings are suggestions only; `O`/`0` substitutions and missing
 suffixes never trigger automatic selection. A failed barcode read does not
 silently fall back to OCR.

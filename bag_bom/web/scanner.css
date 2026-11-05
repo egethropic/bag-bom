@@ -21,6 +21,8 @@ select,textarea{width:100%;border:1px solid #44535e;border-radius:6px;background
 #status{border:1px solid #374a56;border-radius:7px;background:#1d2b35;font-size:12px;line-height:1.6;padding:11px;margin:16px 0 12px}
 #status[data-kind=success]{border-color:#497d6f;color:#b7f3df;background:#16342c}#status[data-kind=warning]{border-color:#806641;background:#342b1d;color:#edd5a9}#status[data-kind=error]{border-color:#90585c;background:#382326;color:#f3c4c4}
 #selected{font-size:12px;line-height:1.5;color:#a1e8ce;padding:4px 0 14px;overflow-wrap:anywhere}
+#detected{font-size:12px;line-height:1.6;color:#e4e9ed;padding:10px 0;overflow-wrap:anywhere}
+.candidate:not(button){border:1px solid #44535e;border-radius:7px;padding:10px 13px;background:#26333d;color:#e4e9ed}
 .candidate{display:flex;flex-direction:column;width:100%;text-align:left;gap:5px;margin:9px 0;overflow-wrap:anywhere}.candidate b{font:600 13px ui-monospace,monospace}.candidate span{font-size:12px;color:#a1e8ce}.candidate small{font-size:10px;color:#b7c4cc;font-weight:400}.candidate.chosen{border-color:#8de2c9}
 details{border-top:1px solid #33414a;margin-top:17px;padding-top:14px}summary{cursor:pointer;font-size:12px;color:#d1dce3;font-weight:600}summary span{font-weight:400;color:#8ba1af;font-size:10px}#match{margin-top:8px;width:100%}footer{font-size:10px;color:#8ba1af;line-height:1.8;border-top:1px solid #33414a;margin-top:21px;padding-top:15px}
 :host(.bag-bom-mini) aside{padding:12px}:host(.bag-bom-mini) h1{font-size:21px}:host(.bag-bom-mini) header small,:host(.bag-bom-mini) h1 span{display:none}

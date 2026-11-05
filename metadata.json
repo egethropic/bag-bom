@@ -13,7 +13,7 @@
   },
   "tags": ["bom", "assembly", "barcode", "camera"],
   "versions": [{
-    "version": "0.2.0", "status": "testing", "kicad_version": "9.0",
+    "version": "0.2.1", "status": "testing", "kicad_version": "9.0",
     "kicad_version_max": "10.99", "runtime": "swig",
     "platforms": ["windows", "linux", "macos"]
   }]

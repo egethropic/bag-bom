@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 — 2026-11-04
+
+- Matching QR/Data Matrix tags select immediately on the first successful decode,
+  with no selection button or OCR toggle dependency.
+- Scan the full camera frame so codes near the edges are not cropped out.
+- Keep the detected part number and no-match explanation visible across missed
+  frames; preserve higher resolution for saved label images.
+- Restore the matching highlight if it was cleared while the same tag is visible.
+- Regression tests cover a single decoded frame followed by misses and an edge-positioned code.
+
 ## 0.2.0 — 2026-11-04
 
 - QR / Data Matrix scanning is the default, with offline ZXing decoding in a worker.

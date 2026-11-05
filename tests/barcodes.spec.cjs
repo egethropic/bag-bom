@@ -50,13 +50,18 @@ test('unknown supplier code explains missing BOM identifiers', async ({page}) =>
   const host = await photo(page, 'unknown-qr');
   await expect(host.locator('#status')).toContainText('not in this BOM');
   expect(await page.evaluate(() => highlightedFootprints)).toEqual([]);
+  await host.locator('#photo').setInputFiles('tests/generated/label.png');
+  await expect(host.locator('#scan-state')).toHaveText('No code found in this image.');
+  await expect(host.locator('#status')).toContainText('not in this BOM');
+  await expect(host.locator('#detected')).toContainText('UNKNOWN123');
 });
-test('auto-select disabled leaves QR results manual', async ({page}) => {
-  const host = page.locator('#bag-bom-root'); await host.locator('#auto').uncheck();
+test('QR selection is immediate even if the OCR toggle is off, with no selection button', async ({page}) => {
+  const host = page.locator('#bag-bom-root');
+  await expect(host.locator('#auto-control')).toBeHidden();
+  await host.locator('#auto').evaluate(input => { input.checked = false; });
   await photo(page, 'lcsc-qr');
   await expect(host.locator('.candidate')).toHaveCount(1);
-  expect(await page.evaluate(() => highlightedFootprints)).toEqual([]);
-  await host.locator('.candidate').click();
+  await expect(host.locator('button.candidate')).toHaveCount(0);
   expect(await page.evaluate(() => highlightedFootprints)).toEqual([0, 1]);
 });
 test('keyboard barcode input auto-selects and ignores customer-reference fields', async ({page}) => {
@@ -87,18 +92,35 @@ test('stop during decoder loading cancels selection and restart works', async ({
   await host.locator('#photo').setInputFiles('tests/generated/lcsc-qr.png');
   await expect(host.locator('#selected')).toContainText('R1, R2');
 });
-for (const fixture of ['lcsc-qr', 'digikey-dm']) {
-    test(fixture + ' webcam: two decoded frames auto-select and Stop releases camera', async () => {
+for (const fixture of ['lcsc-qr', 'digikey-dm', 'lcsc-qr-edge']) {
+    test(fixture + ' webcam: one decoded frame auto-selects and survives later missed frames', async () => {
       const browser = await chromium.launch({headless: true, args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
         `--use-file-for-fake-video-capture=${path.resolve('tests/generated/' + fixture + '.y4m')}`]});
       try {
       const page = await browser.newPage({viewport: {width: 1500, height: 1000}});
+      // Let the real decoder return just one successful frame. Subsequent
+      // misses reproduce a hand-held label briefly moving out of focus.
+      await page.route('**/barcode-worker.js', async route => {
+        const response = await route.fetch();
+        await route.fulfill({response, body: await response.text() + `
+const sendResult = self.postMessage.bind(self); let delivered = false;
+self.postMessage = data => {
+  if (data.results?.length) {
+    if (delivered) data.results = []; else delivered = true;
+  }
+  sendResult(data);
+};`});
+      });
       await page.goto(url);
       const host = page.locator('#bag-bom-root');
       await expect(host.locator('#status')).toContainText('3 part types ready');
       await host.locator('#start').click();
       await expect(host.locator('#selected')).toContainText('R1, R2', {timeout: 20000});
       expect(await page.evaluate(() => highlightedFootprints)).toEqual([0, 1]);
+      await expect(host.locator('#scan-state')).toContainText('Last detected tag stays visible');
+      await expect(host.locator('#detected')).toContainText('RC0603FR-0710KL');
+      await expect(host.locator('#status')).toHaveText('Selected from QR / barcode.');
+      await expect(host.locator('button.candidate')).toHaveCount(0);
       await page.evaluate(() => { window.testTracks = document.getElementById('bag-bom-root').shadowRoot.getElementById('video').srcObject.getTracks(); });
       await page.screenshot({path: `tests/generated/${fixture}-scanner.png`});
       await host.locator('#stop').click();

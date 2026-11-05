@@ -9,7 +9,7 @@
   root.innerHTML = `
     <link rel="stylesheet" href="${base}scanner.css">
     <aside aria-label="Bag BOM scanner">
-      <header><div><small>EGETHROPIC / ASSEMBLY</small><h1>Bag BOM<span>0.2</span></h1></div>
+      <header><div><small>EGETHROPIC / ASSEMBLY</small><h1>Bag BOM<span>0.2.1</span></h1></div>
         <button id="collapse" class="icon" aria-label="Minimize scanner" title="Minimize scanner">−</button></header>
       <div id="body">
         <p class="intro">From the bag to the board.</p>
@@ -23,8 +23,10 @@
         <label class="field-label" for="camera">Camera</label>
         <select id="camera"><option value="">Default camera</option></select>
         <div class="actions"><button id="start" class="primary">Start camera</button><button id="stop" disabled>Stop</button></div>
-        <label class="toggle"><input type="checkbox" id="auto" checked> Auto-select a stable exact match</label>
-        <p class="hint">Point at the square code on a DigiKey or LCSC bag. Two consistent reads select its parts.</p>
+        <label class="toggle" id="auto-control" hidden><input type="checkbox" id="auto" checked> Auto-select stable OCR matches</label>
+        <p class="hint" id="mode-hint">Show the square product code. A matching tag selects its parts immediately—no selection button.</p>
+        <div id="detected" hidden></div>
+        <div id="scan-state" class="hint"></div>
         <div id="status" role="status" aria-live="polite">Loading the BOM…</div>
         <div id="selected" hidden></div>
         <div id="results" aria-label="Matching components"></div>
@@ -57,6 +59,7 @@
 
   let index = [], ready = false, stream = null, workerPromise = null;
   let epoch = 0, timer = null, busy = false, lastAuto = null;
+  let lastCodeStatus = null;
   let ocrQueue = Promise.resolve();
   let decoder = null, decodeId = 0;
   const decodeJobs = new Map();
@@ -67,6 +70,7 @@
     index = M.buildIndex(pcbdata, config.fields,
       [...$('fields').querySelectorAll('input:checked')].map(input => input.value));
     gate.reset(); lastAuto = null;
+    lastCodeStatus = null; $('detected').hidden = true;
     $('results').replaceChildren();
     $('field-count').textContent = `(${index.length} part types)`;
     setStatus(index.length ? `${index.length} part types ready. Start the camera or paste a label.` :
@@ -117,17 +121,24 @@
   }
   function showResult(text, {confidence = 100, live = false, barcode = false, payloads = [text]} = {}) {
     const result = barcode ? B.match(payloads, index) : M.match(text, index);
+    if (barcode) {
+      const typed = result.identifiers.filter(id => id.type !== 'any');
+      const ids = [...new Set((typed.length ? typed : result.identifiers).map(id => id.value))];
+      $('detected').hidden = false;
+      $('detected').textContent = `Tag detected: ${ids.length ? ids.join(' · ') : 'unrecognized product data'}`;
+    }
     $('results').replaceChildren();
     const matches = result.exact.length ? result.exact : result.suggestions;
     for (const {group, evidence} of matches.slice(0, 12)) {
-      const button = document.createElement('button'); button.className = 'candidate';
+      const automatic = barcode && result.status === 'unique';
+      const button = document.createElement(automatic ? 'div' : 'button'); button.className = 'candidate';
       const title = document.createElement('b'); title.textContent = evidence[0]?.value || group.ids[0].value;
       const refs = document.createElement('span'); refs.textContent = group.refs.map(r => r[0]).join(', ');
       const detail = document.createElement('small'); detail.textContent = `${group.value} · ${group.footprint}`;
       const reason = document.createElement('small'); reason.textContent = evidence.length ?
         `Exact ${evidence.map(item => item.field).join(' + ')}` : 'Similar text only — check label before selecting';
       button.append(title, refs, detail, reason);
-      button.addEventListener('click', () => { select(group); button.classList.add('chosen'); });
+      if (!automatic) button.addEventListener('click', () => { select(group); button.classList.add('chosen'); });
       $('results').append(button);
     }
     if (result.status === 'ambiguous') setStatus('Multiple matching part types. Choose the correct one below.', 'warning');
@@ -138,7 +149,15 @@
       'No exact match. Similar numbers below require your confirmation.' :
       'No exact part number found. Hold the label closer or check the matching fields.');
     else setStatus(live ? 'Exact match found. Hold steady for a second read.' : 'Exact match found. Select it below.');
-    if (live) {
+    if (barcode && result.status === 'unique') {
+      // Barcode checksums already validate a decoded tag. Select on its FIRST
+      // frame, independent of the optional OCR stability gate and toggle.
+      const group = result.exact[0].group;
+      const actual = new Set(window.highlightedFootprints || []);
+      if (lastAuto !== group.key || actual.size !== group.refs.length || group.refs.some(([, id]) => !actual.has(id))) {
+        select(group, 'Selected from QR / barcode.');
+      } else setStatus('Selected from QR / barcode.', 'success');
+    } else if (live && !barcode) {
       const stable = gate.observe(result, confidence);
       if (stable && $('auto').checked) {
         if (stable.key !== lastAuto) select(stable, barcode ? 'Selected from QR / barcode.' : true);
@@ -146,9 +165,8 @@
       } else if (result.status === 'unique' && confidence < 75) {
         setStatus('Exact text, but OCR confidence is low. Hold steady or select manually.', 'warning');
       }
-    } else if (barcode && result.status === 'unique' && $('auto').checked) {
-      select(result.exact[0].group, 'Selected from QR / barcode.');
     }
+    if (barcode) lastCodeStatus = {text: $('status').textContent, kind: $('status').dataset.kind};
     return result;
   }
   function releaseDecoder() {
@@ -179,10 +197,15 @@
   }
   function showCodes(codes, live = false) {
     if (!codes.length) {
-      gate.reset(); $('results').replaceChildren(); $('text').value = '';
-      setStatus('No QR / barcode detected yet. Keep the complete square code in focus inside the guide.');
+      gate.reset();
+      $('scan-state').textContent = live ? 'Scanning… Last detected tag stays visible below.' : 'No code found in this image.';
+      // A missed frame must not immediately erase a successful read or the
+      // explanation of why a decoded tag could not match the current board.
+      if (lastCodeStatus) setStatus(lastCodeStatus.text, lastCodeStatus.kind);
+      else setStatus('No QR / barcode detected yet. Keep the complete square code in focus in the camera view.');
       return;
     }
+    $('scan-state').textContent = live ? 'Scanning…' : 'Label image decoded.';
     const payloads = [...new Set(codes.map(code => code.text))];
     $('text').value = payloads.join('\n');
     showResult('', {barcode: true, payloads, live});
@@ -191,7 +214,7 @@
     const bitmap = await createImageBitmap(file);
     try {
       const canvas = document.createElement('canvas');
-      const scale = Math.min(1, 2560 / Math.max(bitmap.width, bitmap.height));
+      const scale = Math.min(1, 4096 / Math.max(bitmap.width, bitmap.height));
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
@@ -256,10 +279,12 @@
     const video = $('video');
     if (!video.videoWidth) throw new Error('Camera has not produced a frame yet.');
     const canvas = document.createElement('canvas');
-    // Match the visible guide, excluding unrelated labels on the bench.
-    const sx = video.videoWidth * 0.05, sy = video.videoHeight * 0.2;
-    const sw = video.videoWidth * 0.9, sh = video.videoHeight * 0.6;
-    const scale = Math.min($('mode').value === 'ocr' ? 2 : 1, 1920 / sw);
+    // QR/Data Matrix require the complete symbol and border. Do not discard the
+    // outer camera area: large labels often put the square code near an edge.
+    const barcode = $('mode').value === 'barcode';
+    const sx = barcode ? 0 : video.videoWidth * 0.05, sy = barcode ? 0 : video.videoHeight * 0.2;
+    const sw = barcode ? video.videoWidth : video.videoWidth * 0.9, sh = barcode ? video.videoHeight : video.videoHeight * 0.6;
+    const scale = Math.min(barcode ? 1 : 2, (barcode ? 4096 : 1920) / sw);
     canvas.width = Math.round(sw * scale); canvas.height = Math.round(sh * scale);
     const ctx = canvas.getContext('2d');
     if ($('mode').value === 'ocr') ctx.filter = 'grayscale(1) contrast(1.25)';
@@ -309,6 +334,7 @@
       if (turn !== epoch) { media.getTracks().forEach(track => track.stop()); return; }
       stream = media; $('video').srcObject = media; await $('video').play();
       if (turn !== epoch) return;
+      root.querySelector('.viewfinder').style.aspectRatio = `${$('video').videoWidth} / ${$('video').videoHeight}`;
       $('camera-off').hidden = true;
       media.getVideoTracks()[0].addEventListener('ended', () => { if (turn === epoch) stopCamera('Camera disconnected. Reconnect it and start again.'); });
       await enumerateCameras();
@@ -326,6 +352,11 @@
     const restart = !!stream;
     stopCamera(null); releaseWorker();
     $('scan-badge').textContent = $('mode').value === 'barcode' ? 'LOCAL QR / BARCODE' : 'LOCAL OCR';
+    $('auto-control').hidden = $('mode').value === 'barcode';
+    $('mode-hint').textContent = $('mode').value === 'barcode' ?
+      'Show the square product code. A matching tag selects its parts immediately—no selection button.' :
+      'Printed text needs two consistent, confident reads. Ambiguous matches stay manual.';
+    $('detected').hidden = true; $('scan-state').textContent = ''; lastCodeStatus = null;
     $('results').replaceChildren(); $('text').value = '';
     if (restart) startCamera();
     else setStatus('Ready. Start the camera or choose a label image.');

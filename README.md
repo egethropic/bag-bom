@@ -4,27 +4,28 @@
 [InteractiveHtmlBom](https://github.com/openscopeproject/InteractiveHtmlBom).
 
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
-[![Tests](https://github.com/egethropic/bag-bom/actions/workflows/test.yml/badge.svg)](https://github.com/egethropic/bag-bom/actions/workflows/test.yml)
 
 Bag BOM is a KiCad companion plugin from **egethropic**. Hold the **QR or Data
-Matrix code on a DigiKey or LCSC bag** in front of your webcam. The first successful
+Matrix code on a supported supplier bag** in front of your webcam. DigiKey, LCSC,
+Mouser, Newark and Arrow payloads are supported as detailed below. The first successful
 decode selects matching components immediately and highlights their placements
 in your InteractiveHtmlBom viewer, including parts on both sides of the board.
 Printed-text OCR remains available as an explicit fallback.
 
 ![Bag BOM scanning a synthetic QR label](docs/scanner.png)
 
-**Experimental v0.2.1.** Tested with real barcode decoding of synthetic QR/Data
-Matrix images and simulated cameras, plus two published DigiKey label photos.
+**Experimental v0.3.0.** Tested with real barcode decoding of synthetic QR/Data
+Matrix/PDF417 images and simulated cameras, plus two published DigiKey label photos.
 A third published photo failed decoding. Physical webcams, glare, crumpled bags,
-small codes, and your actual parts still need bench validation. Check the highlighted part
+small codes, and your actual parts still need bench validation. The new vendor
+formats have synthetic regression coverage, not physical-bag validation. Check the highlighted part
 before soldering. Bag BOM selects parts; it never marks them as placed.
 
 ## Install
 
 1. Install [InteractiveHtmlBom](https://github.com/openscopeproject/InteractiveHtmlBom/wiki/Installation)
    separately in KiCad.
-2. Download `bag-bom-0.2.1-pcm.zip` from
+2. Download `bag-bom-0.3.0-pcm.zip` from
    [Releases](https://github.com/egethropic/bag-bom/releases).
 3. In KiCad's **Plugin and Content Manager → Install from File**, select that ZIP.
 4. Restart the PCB Editor or refresh its action plugins.
@@ -37,14 +38,15 @@ KiCad 10.0.8 on Windows is the locally checked Python runtime. Linux/macOS and
 KiCad 9 are intended targets, not yet manually verified. KiCad 11+ IPC support
 is not included. This project is not yet in KiCad's official plugin catalog.
 
-Manual alternative: extract `bag-bom-0.2.1-manual.zip` so the `bag_bom` folder
+Manual alternative: extract `bag-bom-0.3.0-manual.zip` so the `bag_bom` folder
 sits inside your KiCad user scripting plugins directory. Avoid installing both
 the manual and PCM copies.
 
 ## Prepare and scan
 
 1. In your schematic, add an exact **MPN** and/or supplier field such as **LCSC**,
-   **Digi-Key Part Number**, or **Mouser Part Number**; update the board from the
+   **Digi-Key Part Number**, **Mouser Part Number**, **Newark Part Number**,
+   **Arrow Part Number**, **Farnell Order Code**, or **element14 SKU**; update the board from the
    schematic as appropriate.
 2. Generate an InteractiveHtmlBom export with those fields included in its
    visible/exported fields. Grouping by MPN is recommended. Bag BOM can still
@@ -97,17 +99,49 @@ reference list before proceeding.
 ### Supported codes and supplier payloads
 
 - QR Code, Data Matrix, Code 128, Code 39 and PDF417 decode offline in a worker.
-- DigiKey ECIA records: `1P` is matched as MPN, `30P` as DigiKey SKU. Legacy `P`
+- ECIA Format 06 records: `1P` matches an exact manufacturer or supplier part
+  number. This covers manufacturer labels used by Arrow and other distributors
+  as well as supplier-SKU labels. If the same number identifies different BOM
+  parts, selection stays manual. ASCII control characters and visible
+  `<GS>`, `{GS}`, `[GS]` (also RS/EOT) separators are supported.
+- DigiKey ECIA records: `30P` is matched as DigiKey SKU only with its complete
+  `-ND` suffix. Legacy `P`
   is accepted only as a complete `-ND` SKU when `30P` is absent; customer references
-  are otherwise ignored. ASCII and visible GS/RS separators are supported.
+  are otherwise ignored. Other vendors can use `30P` for non-part data, so it
+  is not treated as a universal SKU field.
+- Mouser: standard ECIA `1P` supplier IDs and the observed `>[)>06` header variant
+  are supported. The variant's `1P` matches a Mouser field. **Include the exact
+  Mouser SKU in the export when the code contains no manufacturer MPN.** Customer
+  `P`, purchase-order `K`, and sales-order `14K` fields are ignored; a Mouser SKU
+  is never converted to an MPN by removing its prefix.
+- Newark: the observed `3P` SKU field matches exported supplier identifiers;
+  `1P` manufacturer/supplier IDs also work. `3P` alone does not establish the
+  vendor, so collisions across supplier columns remain ambiguous.
+- Product URL QR codes: Mouser `/ProductDetail/manufacturer/MPN` and Arrow
+  `/en/products/MPN/manufacturer` paths match MPN; Newark, Farnell and element14
+  `/dp/SKU` paths match that vendor's column. Known supplier domains only;
+  tracking/order query parameters do not supply identifiers.
 - LCSC/JLCPCB `{pc:C12345,pm:MPN,...}` and JSON equivalents: `pc` matches LCSC,
   `pm` matches MPN. Whole raw identifiers and LCSC product-code URLs also work.
-  URLs are parsed locally and never opened. Unsupported label variants report
-  that no supported identifier was found.
+  URLs are parsed locally and never opened. Whole raw identifiers and explicit
+  JSON fields such as `{"Mouser Part Number":"603-DEMO100"}` also work.
+  Unsupported label variants report that no supported identifier was found.
+
+Supplier column aliases include `Part Number`, `Part No`, `PN`, `SKU`, `Stock No`
+and `Order Code`. Avnet, RS/RS Components and TME columns are also recognized for
+raw identifiers and generic ECIA records; their proprietary payload variants
+are not covered. No vendor API, account, or internet lookup is needed.
 
 Format references: [DigiKey's own decoding guide](https://forum.digikey.com/t/digikey-product-labels-decoding-digikey-barcodes/41097)
-and [the scan2place author's LCSC/JLCPCB payload example](https://github.com/theautomatist/scan2place#qr-code-format).
-The LCSC format is based on observed labels, not a published supplier-wide guarantee.
+and [the scan2place author's LCSC/JLCPCB payload example](https://github.com/theautomatist/scan2place#qr-code-format),
+[Arrow's supplier labeling specification, sections 4–5](https://static4.arrow.com/-/media/five-years-out/company/1-19-21-supplier-quality/gsq-017-supplier-deliveries-labeling-and-packaging_revb-2.pdf),
+[a label survey documenting Mouser's header and Newark's 3P field](https://github.com/inventree/InvenTree/issues/853),
+[a Mouser scan author's observations](https://hackaday.io/page/12832-lookup-digikey-and-mouser-parts-by-qr-code-using-a-telegram-bot),
+and [TME's specification showing the non-SKU use of 30P](https://www.tme.eu/gb/help/78084/release-label/).
+Observed formats are not supplier-wide guarantees. Arrow's document specifies
+incoming supplier labels, not every outgoing Arrow bag. Regional, legacy and
+custom labels can differ. These references inform our own parser; no external
+barcode-parser source code is incorporated.
 
 ## Privacy and session behavior
 
@@ -161,7 +195,7 @@ The fixture script downloads the unmodified InteractiveHtmlBom viewer at commit
 `d1eb5b79a52a2ddc1ce270b63920346463c19b05` (2.12.0 development line). Pass a local
 upstream checkout as its optional argument to avoid the download. The tests use
 a fictional board, an intentionally mixed BOM group, front/back placements, and
-a synthetic label. Browser tests exercise real QR/Data Matrix decoding and OCR
+a synthetic label. Browser tests exercise real QR/Data Matrix/PDF417 decoding and OCR
 for images and fake webcams, multi-code ambiguity, exact selection, camera denial,
 stop/restart/minimize, and layout. Barcode parsing tests cover supplier namespaces,
 conflicting identifiers, spaces, excluded order/lot fields, and exact-match boundaries.

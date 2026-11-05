@@ -9,7 +9,7 @@
   root.innerHTML = `
     <link rel="stylesheet" href="${base}scanner.css">
     <aside aria-label="Bag BOM scanner">
-      <header><div><small>EGETHROPIC / ASSEMBLY</small><h1>Bag BOM<span>0.2.1</span></h1></div>
+      <header><div><small>EGETHROPIC / ASSEMBLY</small><h1>Bag BOM<span>0.3.0</span></h1></div>
         <button id="collapse" class="icon" aria-label="Minimize scanner" title="Minimize scanner">−</button></header>
       <div id="body">
         <p class="intro">From the bag to the board.</p>

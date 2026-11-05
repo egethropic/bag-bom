@@ -13,6 +13,11 @@
     'digikey', 'digikeypart', 'digikeypartnumber', 'digikeypn',
     'mouser', 'mouserpart', 'mouserpartnumber', 'mouserpn', 'sku', 'supplierpartnumber',
   ]);
+  for (const supplier of ['lcsc', 'digikey', 'mouser', 'newark', 'arrow', 'farnell', 'element14', 'avnet', 'rs', 'rscomponents', 'tme']) {
+    for (const suffix of ['', 'part', 'partnumber', 'partno', 'pn', 'sku', 'stocknumber', 'stockno', 'ordercode']) {
+      knownFields.add(supplier + suffix);
+    }
+  }
   const normalize = value => String(value ?? '').normalize('NFKC').toUpperCase()
     .replace(/[‐‑‒–—−]/g, '-').replace(/\s+/g, '').trim();
   function isIdentifier(value) {

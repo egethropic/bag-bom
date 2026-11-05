@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 — 2026-11-05
+
+- Add Mouser, Newark and Arrow barcode payload support, plus product URL QR
+  matching for Mouser, Arrow, Newark, Farnell and element14.
+- Recognize supplier part-number, SKU, stock-number and order-code columns by
+  default, including Avnet, RS and TME for generic identifiers.
+- Match ECIA 1P manufacturer/supplier identifiers, Mouser's observed header
+  variant, Newark's observed 3P field, and bracketed control separators.
+- Keep supplier namespaces distinct, reject contradictory identifiers, and
+  retain immediate selection without a selection button.
+- Test synthetic vendor Data Matrix, QR and PDF417 images through the real
+  decoder, including one-frame webcam auto-selection. Physical vendor bags
+  still need bench validation.
+
 ## 0.2.1 — 2026-11-04
 
 - Matching QR/Data Matrix tags select immediately on the first successful decode,

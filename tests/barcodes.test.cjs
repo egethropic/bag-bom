@@ -68,3 +68,63 @@ test('empty, unsupported, malformed and excessive payloads do not produce matche
   for (const code of ['', '{pc:C25804', '{"pc":12345}', 'x'.repeat(10001), null, undefined, dk('1P', '30P', 'P')])
     assert.deepEqual(B.parse(code), []);
 });
+
+const vendorFields = ['Value', 'Footprint', 'MPN', 'Mouser Part No', 'Newark Stock No', 'Arrow Part Number', 'Farnell Order Code', 'element14 SKU'];
+function vendorIndex(rows) {
+  return M.buildIndex({bom: {both: [rows.map((_, i) => ['R' + (i + 1), i])], fields: rows}}, vendorFields);
+}
+const vendorBom = vendorIndex([['10k', '0603', 'RC0603FR-0710KL', '603-DEMO100', '12AB3456', 'ARROW-DEMO100', '1234567', '7654321']]);
+
+test('supplier aliases are enabled by default and typed JSON stays in its vendor namespace', () => {
+  assert.deepEqual(M.defaultFields(vendorFields), vendorFields.slice(2));
+  for (const [field, value] of vendorFields.slice(3).map((field, i) => [field, vendorBom[0].ids[i + 1].value])) {
+    assert.equal(B.match([JSON.stringify({[field]: value})], vendorBom).status, 'unique', field);
+  }
+  assert.equal(B.match(['{"Mouser Part No":"12AB3456"}'], vendorBom).status, 'none');
+});
+
+test('Mouser legacy header and standard ECIA supplier part select an exact Mouser SKU', () => {
+  for (const payload of ['>[)>06\x1dKORDER100\x1d14KSHIP100\x1d1P603-DEMO100\x1dPCUSTOM100\x1dQ20\x04',
+    dk('1P603-DEMO100', 'PCUSTOM100'), '[)>[RS]06[GS]1P603-DEMO100[RS][EOT]']) {
+    assert.equal(B.match([payload], vendorBom).status, 'unique');
+  }
+  // A Mouser code containing only its SKU needs that SKU in the BOM.
+  assert.equal(B.match(['>[)>06\x1d1P603-DEMO100'], bom).status, 'none');
+  assert.equal(B.match([dk('P603-DEMO100', 'K603-DEMO100', '14K603-DEMO100')], vendorBom).status, 'none');
+});
+
+test('Newark 3P supplier SKU and Arrow 1P manufacturer/supplier identifiers select', () => {
+  for (const payload of [dk('3P12AB3456'), dk('1PRC0603FR-0710KL', '3P12AB3456'),
+    dk('17V98897', '1PARROW-DEMO100', 'SSERIAL100'), dk('1PRC0603FR-0710KL', 'Q20')]) {
+    assert.equal(B.match([payload], vendorBom).status, 'unique');
+  }
+  assert.equal(B.match([dk('3PUNKNOWN100', '1PRC0603FR-0710KL')], vendorBom).status, 'ambiguous');
+  assert.equal(B.match([dk('3P12AB3456', '1PUNKNOWN100')], vendorBom).status, 'ambiguous');
+});
+
+test('generic ECIA identifiers never silently resolve namespace collisions or strip vendor prefixes', () => {
+  const collision = vendorIndex([
+    ['x','x','603-DEMO100','','12AB3456'], ['y','y','OTHER100','603-DEMO100','12AB3456'],
+  ]);
+  assert.equal(B.match([dk('1P603-DEMO100')], collision).status, 'ambiguous');
+  assert.equal(B.match([dk('3P12AB3456')], collision).status, 'ambiguous');
+  assert.equal(B.match([dk('3PRC0603FR-0710KL')], vendorBom).status, 'none');
+  assert.equal(B.match([dk('1P603-RC0603FR-0710KL')], vendorBom).status, 'none');
+  assert.equal(B.match([dk('30P12AB3456')], vendorBom).status, 'none');
+});
+
+test('known vendor product URLs match exact identifiers locally', () => {
+  for (const url of ['https://www.mouser.com/ProductDetail/Yageo/RC0603FR-0710KL?qs=tracking',
+    'https://www.mouser.de/ProductDetail/Yageo/RC0603FR-0710KL',
+    'https://www.arrow.com/en/products/rc0603fr-0710kl/yageo',
+    'https://www.newark.com/yageo/test/dp/12AB3456?CMP=tracking',
+    'https://uk.farnell.com/yageo/test/dp/1234567', 'https://au.element14.com/yageo/test/dp/7654321']) {
+    assert.equal(B.match([url], vendorBom).status, 'unique', url);
+  }
+  for (const url of ['https://mouser.com.evil.test/ProductDetail/Yageo/RC0603FR-0710KL',
+    'https://evilnewark.com/test/dp/12AB3456', 'https://arrow.com/orders/RC0603FR-0710KL',
+    'https://newark.com/?order=12AB3456', 'https://newark.com/test/dp/1234567',
+    'https://mouser.com/ProductDetail/Yageo/%E0%A4%A', 'https://arrow.com/en/products/rc0603fr-0710k/yageo']) {
+    assert.equal(B.match([url], vendorBom).status, 'none', url);
+  }
+});

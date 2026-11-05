@@ -92,7 +92,25 @@ test('stop during decoder loading cancels selection and restart works', async ({
   await host.locator('#photo').setInputFiles('tests/generated/lcsc-qr.png');
   await expect(host.locator('#selected')).toContainText('R1, R2');
 });
-for (const fixture of ['lcsc-qr', 'digikey-dm', 'lcsc-qr-edge']) {
+for (const fixture of ['mouser-dm', 'newark-dm', 'arrow-pdf417', 'mouser-qr', 'newark-qr', 'arrow-qr', 'farnell-qr', 'element14-qr']) {
+  test(fixture + ' photo decodes and selects without a selection button or network lookup', async ({page, context}) => {
+    const external = [];
+    context.on('request', req => { if (/^https?:/.test(req.url()) && new URL(req.url()).origin !== new URL(url).origin) external.push(req.url()); });
+    const host = await photo(page, fixture);
+    await expect(host.locator('#status')).toHaveText('Selected from QR / barcode.');
+    expect(await page.evaluate(() => highlightedFootprints)).toEqual([0, 1]);
+    await expect(host.locator('button.candidate')).toHaveCount(0);
+    expect(external).toEqual([]);
+  });
+}
+
+test('Newark SKU with conflicting manufacturer part never auto-selects', async ({page}) => {
+  const host = await photo(page, 'vendor-conflict-dm');
+  await expect(host.locator('#status')).toContainText('Multiple matching');
+  expect(await page.evaluate(() => highlightedFootprints)).toEqual([]);
+});
+
+for (const fixture of ['lcsc-qr', 'digikey-dm', 'lcsc-qr-edge', 'mouser-dm', 'newark-dm', 'arrow-pdf417']) {
     test(fixture + ' webcam: one decoded frame auto-selects and survives later missed frames', async () => {
       const browser = await chromium.launch({headless: true, args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
         `--use-file-for-fake-video-capture=${path.resolve('tests/generated/' + fixture + '.y4m')}`]});
@@ -118,7 +136,8 @@ self.postMessage = data => {
       await expect(host.locator('#selected')).toContainText('R1, R2', {timeout: 20000});
       expect(await page.evaluate(() => highlightedFootprints)).toEqual([0, 1]);
       await expect(host.locator('#scan-state')).toContainText('Last detected tag stays visible');
-      await expect(host.locator('#detected')).toContainText('RC0603FR-0710KL');
+      const detected = {'mouser-dm': '603-DEMO100', 'newark-dm': '12AB3456', 'arrow-pdf417': 'ARROW-DEMO100'};
+      await expect(host.locator('#detected')).toContainText(detected[fixture] || 'RC0603FR-0710KL');
       await expect(host.locator('#status')).toHaveText('Selected from QR / barcode.');
       await expect(host.locator('button.candidate')).toHaveCount(0);
       await page.evaluate(() => { window.testTracks = document.getElementById('bag-bom-root').shadowRoot.getElementById('video').srcObject.getTracks(); });

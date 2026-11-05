@@ -43,14 +43,14 @@ data = {
     'bom': {'both': [[['R1', 0], ['R2', 1], ['R3', 2]], [['C1', 3]]],
             'F': [[['R1', 0], ['R3', 2]], [['C1', 3]]], 'B': [[['R2', 1]]], 'skipped': [4],
             'fields': {
-                0: ['10k', 'R_0603', 'RC0603FR-0710KL', 'C25804'],
-                1: ['10k', 'R_0603', 'RC0603FR-0710KL', 'C25804'],
+                0: ['10k', 'R_0603', 'RC0603FR-0710KL', 'C25804', '603-DEMO100', '12AB3456', 'ARROW-DEMO100', '1234567', '7654321'],
+                1: ['10k', 'R_0603', 'RC0603FR-0710KL', 'C25804', '603-DEMO100', '12AB3456', 'ARROW-DEMO100', '1234567', '7654321'],
                 2: ['10k', 'R_0603', 'ERJ-3EKF1002V', 'C15401'],
                 3: ['1uF', 'C_0603', 'GRM188R71C105KA12D', 'C15849'],
                 4: ['DNP', 'R_0603', 'DO-NOT-SELECT123', 'C999999'],
             }}
 }
-config = {'fields': ['Value', 'Footprint', 'MPN', 'LCSC'], 'dark_mode': True,
+config = {'fields': ['Value', 'Footprint', 'MPN', 'LCSC', 'Mouser Part No', 'Newark Stock No', 'Arrow Part Number', 'Farnell Order Code', 'element14 SKU'], 'dark_mode': True,
           'show_pads': True, 'show_fabrication': False, 'show_silkscreen': True,
           'highlight_pin1': 'selected', 'redraw_on_drag': True, 'board_rotation': 0,
           'checkboxes': 'Sourced,Placed', 'bom_view': 'left-right', 'layer_view': 'FB',
@@ -94,7 +94,7 @@ print(f'Generated fixture and OCR labels in {OUT}')
 # Real machine-readable codes with fictional payloads for the barcode decoder.
 import subprocess
 subprocess.run(['node', str(ROOT / 'scripts/make_barcode_fixtures.cjs')], check=True)
-for name in ('lcsc-qr', 'digikey-dm', 'lcsc-qr-edge'):
+for name in ('lcsc-qr', 'digikey-dm', 'lcsc-qr-edge', 'mouser-dm', 'newark-dm', 'arrow-pdf417'):
     frame_image = Image.new('RGB', (1280, 720), 'white')
     code = Image.open(OUT / (name.replace('-edge', '') + '.png')).convert('RGB')
     code.thumbnail((340, 340), Image.Resampling.NEAREST)
